@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Patrimonial SMAPA</title>
+    <link rel="stylesheet" href="css/estilo.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SISTEMA DE CONTROLE PATRIMONIAL</h1>
+            <p class="subtitle">SECRETARIA MUNICIPAL DO MEIO AMBIENTE E PROTEÇÃO ANIMAL</p>
+            <p class="subtitle">PREFEITURA MUNICIPAL DE MOGI DAS CRUZES - SP</p>
+        </div>
+        
+        <div class="toolbar">
+            <div class="filters">
+                <input type="text" id="busca" placeholder="Buscar tombamento, descrição, responsável..." onkeyup="filtrarTabela()">
+                <select id="categoria" onchange="filtrarTabela()">
+                    <option value="">Todas categorias</option>
+                    <option value="Equipamento TI">Equipamento TI</option>
+                    <option value="Veículos">Veículos</option>
+                    <option value="Mobiliário">Mobiliário</option>
+                    <option value="Equipamentos Médicos">Equipamentos Médicos</option>
+                    <option value="Eletrodomésticos">Eletrodomésticos</option>
+                    <option value="Comunicação">Comunicação</option>
+                    <option value="Audiovisual">Audiovisual</option>
+                </select>
+                <button onclick="abrirModalAdicionar()">➕ Novo Patrimônio</button>
+                <button onclick="exportarExcel()">📊 Excel</button>
+                <button onclick="gerarRelatorio()">📋 Relatório</button>
+                <button onclick="limparFiltros()">🔄 Limpar</button>
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-number" id="totalItens">0</span>
+                <span class="stat-label">Total Itens</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="totalAtivos">0</span>
+                <span class="stat-label">Ativos</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="totalManutencao">0</span>
+                <span class="stat-label">Manutenção</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="totalCategorias">0</span>
+                <span class="stat-label">Categorias</span>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table id="tabelaPatrimonio">
+                <thead>
+                    <tr>
+                        <th>Tombamento</th>
+                        <th>Descrição</th>
+                        <th>Categoria</th>
+                        <th>Data Aquisição</th>
+                        <th>Setor</th>
+                        <th>Responsável</th>
+                        <th>Localização</th>
+                        <th>Situação</th>
+                        <th>Incluído em</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="corpoTabela"></tbody>
+            </table>
+        </div>
+
+        <div class="footer">
+            <p>Sistema desenvolvido internamente pela SMAPA</p>
+            <p>Versão 2.0 - 2024 | Atualização: <span id="dataAtualizacao"></span></p>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar/Editar -->
+    <div id="modalPatrimonio" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitulo">Novo Patrimônio</h2>
+                <span class="close" onclick="fecharModal()">&times;</span>
+            </div>
+            <form id="formPatrimonio" onsubmit="salvarPatrimonio(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Tombamento *</label>
+                        <input type="text" id="inputTombamento" required 
+                               placeholder="000000123456" maxlength="12">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Data Aquisição *</label>
+                        <input type="date" id="inputDataAquisicao" required>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label>Descrição *</label>
+                        <input type="text" id="inputDescricao" required 
+                               placeholder="Ex: Computador All In One">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Categoria *</label>
+                        <select id="inputCategoria" required>
+                            <option value="">Selecione...</option>
+                            <option value="Equipamento TI">Equipamento TI</option>
+                            <option value="Veículos">Veículos</option>
+                            <option value="Mobiliário">Mobiliário</option>
+                            <option value="Equipamentos Médicos">Equipamentos Médicos</option>
+                            <option value="Eletrodomésticos">Eletrodomésticos</option>
+                            <option value="Comunicação">Comunicação</option>
+                            <option value="Audiovisual">Audiovisual</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Situação *</label>
+                        <select id="inputSituacao" required>
+                            <option value="Ativo">Ativo</option>
+                            <option value="Manutenção">Manutenção</option>
+                            <option value="Inativo">Inativo</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label>Setor *</label>
+                        <input type="text" id="inputSetor" required 
+                               placeholder="Ex: SEC MEIO AMBIENTE">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Responsável *</label>
+                        <input type="text" id="inputResponsavel" required 
+                               placeholder="Ex: Servidor Administrativo">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Localização *</label>
+                        <input type="text" id="inputLocalizacao" required 
+                               placeholder="Ex: Sala 201">
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label>Observações</label>
+                        <textarea id="inputObservacoes" rows="3" 
+                                  placeholder="Informações adicionais..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+                    <button type="submit" class="btn-primary">Salvar Patrimônio</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Confirmação de Exclusão -->
+    <div id="modalConfirmar" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>⚠️ Confirmar Exclusão</h2>
+                <span class="close" onclick="fecharModalConfirmar()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Deseja realmente excluir este patrimônio?</p>
+                <p><strong id="itemExcluir"></strong></p>
+                <p class="warning-text">Esta ação não pode ser desfeita!</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="fecharModalConfirmar()">Cancelar</button>
+                <button class="btn-danger" onclick="confirmarExclusao()">Sim, Excluir</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="dados/patrimonio.js"></script>
+    <script src="js/funcoes.js"></script>
+</body>
+</html>
